@@ -143,8 +143,50 @@ use app\models\Task;
                 }
 
                 var select = '';
-                $.each(data.data, function (key, value) {
-                    select += '<option value="' + value.id + '">' + value.message + '</option>';
+                var arr1 = [];
+        		var arr2 = [];
+        		var arr3 = [];
+        		var arr4 = [];
+        		data.data.forEach(function (value, key) {
+        		    var m = value.id.split('.').map(function(item) {
+        			return parseInt(item, 10)
+        		    });
+        		    if (m.length !== 3 || !m.every(function(item) {
+        			return !isNaN(item)
+        		    })) {
+        			arr4.push(value);
+        			return
+        		    }
+
+        		    if (!arr1[m[0]]) {
+        		    	arr1[m[0]] = [m];
+          		    } else {
+        		    	arr1[m[0]].push(m);
+        		    }
+                        });
+        		arr1.forEach(function (value, key) {
+        		    arr2 = [];
+        		    value.forEach(function (value1, key1) {
+        		    	if (!arr2[value1[1]]) {
+        		    		arr2[value1[1]] = [value1];
+          		    	} else {
+        				arr2[value1[1]].push(value1);
+        		    	}
+          		    });
+        		    arr2.forEach(function (value2, key2) {
+        		   	value2.sort(function (x, y) {
+        				return x[2] - y[2]
+        			});
+        			arr3 = arr3.concat(value2);
+        		    });
+                        });
+
+        		arr3.forEach(function (value3, key3) {
+        		    arr3[key3] = value3.join('.');
+        		});
+
+                arr3.reverse().concat(arr4).forEach(function (value3, key3) {
+                    select += '<option value="' + (value3.id || value3) + '">' + (value3.message || value3) + '</option>';
                 });
                 $('#task-commit_id').html(select);
                 $('.get-history').hide()
@@ -159,6 +201,17 @@ use app\models\Task;
 
         // 页面加载完默认拉取master的commit log
         getCommitList();
+
+        //submit发送dingding
+        $('#submit').click(function() {
+        	var info = {
+                title: $('#task-title').val(),
+        	    branch: $('#branch').val(),
+        	    commit_id: $('#task-commit_id').val()
+        	};
+
+         	$.get("<?= Url::to('@web/ding/create-message') ?>", {projectId: <?= (int)$_GET['projectId'] ?>, info: JSON.stringify(info)})
+        })
 
         // 查看所有分支提示
         $('.show-tip')

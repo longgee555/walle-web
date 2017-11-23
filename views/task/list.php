@@ -126,6 +126,7 @@ use yii\helpers\Url;
                 },
                 function(data) {
                     if(data.code == 0) {
+                        $.get("<?= Url::to('@web/ding/verify-message') ?>", {taskId: $this.data('id'), status: $this.is(':checked') ? 1 : 0});
                         window.location.reload();
                     } else {
                         alert(data.msg);
@@ -148,13 +149,20 @@ use yii\helpers\Url;
         $('.btn-delete').click(function(e) {
             $this = $(this);
             if(confirm('<?= yii::t('w', 'js delete confirm') ?>')) {
-                $.get('<?= Url::to('@web/task/delete') ?>', {taskId: $this.data('id')}, function(o) {
-                    if(!o.code) {
-                        $this.closest("tr").remove();
+                $.get('<?= Url::to('@web/ding/delete-message') ?>', {taskId: $this.data('id')}, function(o) {
+                    if (!o.code) {
+                	    $.get('<?= Url::to('@web/task/delete') ?>', {taskId: $this.data('id')}, function(o) {
+                            if (!o.code) {
+                                $this.closest("tr").remove();
+                            } else {
+                                alert('<?= yii::t('task', 'js delete failed') ?>' + o.msg);
+                			}
+                		})
                     } else {
                         alert('<?= yii::t('task', 'js delete failed') ?>' + o.msg);
-                    }
-                })
+                	}
+                });
+
             }
         })
     })
